@@ -2,18 +2,26 @@
 
 import sys
 import csv
-
+import time
+import bson
+import json
 import os.path
+import hashlib
+import argparse
 import collections
-
+import pandas as pd
 
 from tqdm import tqdm
-
+from os import listdir
+from bson import json_util
+from pymongo import MongoClient
 from features_managment import *
-
+from os.path import isdir, isfile
+from collections import OrderedDict
 from os.path import join as join_dir
-
+from argparse import RawTextHelpFormatter
 from androguard.core.bytecodes import apk
+from avclass_caller import get_avclass_label
 
 from multiprocessing import Pool
 import multiprocessing
@@ -55,8 +63,7 @@ def multi(argsList, total):
 
 
 def wrapper(args):
-
-    return analyze_apks(*args)
+        return analyze_apks(*args)
 
 
 def features_extractor(apks_directory, output_folder, export_csv):
@@ -89,11 +96,16 @@ def features_extractor(apks_directory, output_folder, export_csv):
 
     N_argsList = [argsList[i:i+N] for i in range(0,total,N)]
 
-    for nlist in tqdm(N_argsList):
-        cnt = 0
+    for nlist in tqdm(N_argsList[1:]):
+        cnt = 1
         total = len(nlist)
 
-        apk_analysis_list = multi((nlist), total)
+        try:
+            apk_analysis_list = multi((nlist), total)
+        except Exception as e:
+            print "error: args" , e.args
+            cnt += 1
+            continue
         # for i in apk_analysis_list_temp:
         #     apk_analysis_list.append(i)
 
